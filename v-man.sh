@@ -24,8 +24,14 @@ else
   fi
 fi
 
-disk_name="disk-$vm_name.qcow2"
-qemu-img create -f qcow2 $disk_name $disk_size
+mkdir -p disks
+disk_name="$vm_name.qcow2"
+disk_path="./disks/$disk_name"
+
+if ! qemu-img create -f qcow2 "$disk_path" "$disk_size"; then
+  echo "Failed to create disk image. It may already exist. Exiting..."
+  exit 1
+fi
 
 vm_id=$(uuidgen)
 mkdir "./$vm_id"
@@ -106,11 +112,11 @@ sudo qemu-system-x86_64 \
   -kernel "./$vm_id/kernel" \
   -initrd "./$vm_id/initrd.img" \
   -cdrom "$iso_path" \
-  -drive file="$disk_name",format=qcow2 \
+  -drive file="$disk_path",format=qcow2 \
   -drive file="./$vm_id/seed.iso",format=raw \
   -boot order=cdn \
   -net nic \
   -net bridge,br=br0 \
   -append "autoinstall ds=nocloud" || {
-    rm "$disk_name"
+    rm "$disk_path"
   }
