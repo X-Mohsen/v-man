@@ -66,7 +66,7 @@ autoinstall:
   network:
     version: 2
     ethernets:
-      enp5s0:
+      ens3:
         dhcp4: true
         dhcp6: false
         optional: true
