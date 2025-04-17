@@ -1,9 +1,10 @@
 #!/bin/bash
 
 vm_name=$1
-disk_size=${2:-"20G"}
-username=${3:-"ubuntu"}
-password=${4:-"ubuntu"}
+iso_path=$2
+disk_size=${3:-"20G"}
+username=${4:-"ubuntu"}
+password=${5:-"ubuntu"}
 password_hash=$(mkpasswd --method=SHA-512 "$password")
 
 # Check if vm_name argument is missing
@@ -12,24 +13,27 @@ if [ -z "$vm_name" ]; then
     exit 1
 fi
 
-# Check if a directory exists with the same name as the argument
-if [ -d "/$vm_name" ]; then
-    echo "Error: A directory named '$vm_name' already exists. Exiting..."
-    exit 1
+# Check ISO file
+if [ -z "$iso_path" ]; then
+  echo "ISO file is not provided. Exiting..."
+  exit 1
 else
-    echo "Creating directory '/$vm_name'..."
-    mkdir "./$vm_name" || { echo "Failed to create directory. Exiting..."; exit 1; }
+  if [ ! -f "$iso_path" ]; then
+      echo "File does not exist."
+      exit 1
+  fi
 fi
-
-cd $vm_name
 
 disk_name="disk-$vm_name.qcow2"
 qemu-img create -f qcow2 $disk_name $disk_size
 
-mkdir "./seed"
+vm_id=$(uuidgen)
+mkdir "./$vm_id"
+# Trap to clean up the directory when the script exits
+trap "echo 'Cleaning up...'; rm -rf ./$vm_id" EXIT
 
 
-cat <<EOF > "./seed/user-data"
+cat <<EOF > "./$vm_id/user-data"
 #cloud-config
 autoinstall:
   version: 1
@@ -65,13 +69,14 @@ autoinstall:
 EOF
 
 
-cat <<EOF > "./seed/meta-data"
+cat <<EOF > "./$vm_id/meta-data"
 instance-id: $vm_name
-local-hostname: ubuntu
+local-hostname: $vm_name
 EOF
 
+
 echo "Creating iso file based on default seed data..."
-cloud-localds seed.iso seed/user-data seed/meta-data
+cloud-localds "./$vm_id/seed.iso" "./$vm_id/user-data" "./$vm_id/meta-data"
 
 
 read -p "Do you want to proceed with the installation? [y/N]: " choice
@@ -83,25 +88,29 @@ else
   exit 1
 fi
 
-
-sudo mount -o loop ../ubuntu-24.04.2-live-server-amd64.iso /mnt/virtual-man
-
-cp /mnt/virtual-man/casper/vmlinuz kernel
-cp /mnt/virtual-man/casper/initrd initrd.img
-
+# kernel and initrd is needed for auto-install procces
+sudo mkdir -p /mnt/virtual-man
+sudo mount -o loop "$iso_path" /mnt/virtual-man || {
+  echo "Failed to mount ISO file. Exiting..."
+  exit 1
+}
+cp /mnt/virtual-man/casper/vmlinuz "./$vm_id/kernel"
+cp /mnt/virtual-man/casper/initrd "./$vm_id/initrd.img"
 sudo umount /mnt/virtual-man
 
-qemu-system-x86_64 \
+sudo qemu-system-x86_64 \
   -enable-kvm \
   -m 4096 \
   -smp 2 \
   -cpu host \
-  -kernel kernel \
-  -initrd initrd.img \
-  -cdrom ../ubuntu-24.04.2-live-server-amd64.iso \
+  -kernel "./$vm_id/kernel" \
+  -initrd "./$vm_id/initrd.img" \
+  -cdrom "$iso_path" \
   -drive file="$disk_name",format=qcow2 \
-  -drive file=seed.iso,format=raw \
+  -drive file="./$vm_id/seed.iso",format=raw \
   -boot order=cdn \
   -net nic \
-  -net user \
-  -append "autoinstall ds=nocloud"
+  -net bridge,br=br0 \
+  -append "autoinstall ds=nocloud" || {
+    rm "$disk_name"
+  }
