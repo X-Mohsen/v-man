@@ -1,25 +1,31 @@
-# V-man > Virtual Man
+# V-man 
 
-This bash script automates the creation and installation of an Ubuntu 24.04 virtual machine using **cloud-init autoinstall**, `qemu`, and `cloud-localds`.
+This bash script automates the creation and installation of an Ubuntu virtual machine using **cloud-init autoinstall**, `qemu`, and `cloud-localds`.
 
 ## 📦 Features
 
-- Automatically creates a directory for the VM
 - Generates a virtual disk with specified size
-- Prepares a cloud-init `user-data` file with:
-  - Hostname, username, password
-  - SSH server installation and password login
-  - Package installation (`vim`, `git`)
-- Mounts Ubuntu ISO to extract kernel and initrd
+- Prepares cloud-init `user-data` & `meta-data` files
+- Mounts ISO to extract the kernel and initrd files required for automated installation.
 - Boots the VM with autoinstall configuration
+
+---
+
+> ⚠️ **Note**:  
+> This script is designed specifically for **Ubuntu Live Server ISOs** and tested with:
+>
+> - **Host OS**: Ubuntu 24.04.2  
+> - **ISO**: Ubuntu Live Server 24.04.2  
+>
+> Other distributions or desktop ISOs may not work correctly with this autoinstall setup.
 
 ---
 
 ## 🚀 Usage
 
 ```bash
-chmod +x install-vm.sh
-./v-man.sh <vm_name> [disk_size] [username] [password]
+chmod +x v-man.sh
+./v-man.sh <vm_name> <iso_path> [disk_size] [username] [password]
 ```
 
 ### Arguments
@@ -27,6 +33,7 @@ chmod +x install-vm.sh
 | Argument    | Description                      | Default  |
 |-------------|----------------------------------|----------|
 | `vm_name`   | Name of the VM (also folder name)| *required* |
+| `iso_path`  | Path of ISO file                 | *required* |
 | `disk_size` | Virtual disk size (e.g. `30G`)   | `20G`    |
 | `username`  | Login username                   | `ubuntu` |
 | `password`  | Login password                   | `ubuntu` |
@@ -34,52 +41,5 @@ chmod +x install-vm.sh
 ### Example
 
 ```bash
-./v-man.sh test-vm 25G john mysecretpass
-```
-
----
-
-### ✅ After the first install completes
-
-To boot into the installed system:
-
-```bash
-qemu-system-x86_64 \
-  -enable-kvm \
-  -m 4096 \
-  -smp 2 \
-  -cpu host \
-  -drive file="disk-<vm_name>.qcow2",format=qcow2 \
-  -boot order=c \
-  -net nic \
-  -net user
-```
-
-Do **not** attach `-cdrom` or `seed.iso`.
-
----
-
-## 📁 Folder Structure
-
-After running the script, a folder named after the VM is created containing:
-
-```
-<vm_name>/
-├── disk-<vm_name>.qcow2
-├── seed.iso
-├── kernel
-├── initrd.img
-└── seed/
-    ├── user-data
-    └── meta-data
-```
-
----
-
-## 🧹 Cleanup
-
-To delete the VM:
-
-```bash
-rm -rf <vm_name>
+./v-man.sh test-vm ubuntu-live-server.iso 25G john mysecretpass
 ```
