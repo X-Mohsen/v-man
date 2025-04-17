@@ -1,4 +1,4 @@
-# V-man 
+# V-man
 
 This bash script automates the creation and installation of an Ubuntu virtual machine using **cloud-init autoinstall**, `qemu`, and `cloud-localds`.
 
@@ -43,3 +43,31 @@ chmod +x v-man.sh
 ```bash
 ./v-man.sh test-vm ubuntu-live-server.iso 25G john mysecretpass
 ```
+
+---
+
+### 2. **Run VM with `v-run.sh`:**
+
+Once the VM is created, you can use `v-run.sh` to either list available disks or start a VM.
+
+```bash
+chmod +x v-run.sh
+./v-run.sh <vm_name>   # To run a VM
+./v-run.sh list        # To list all VM disks (without .qcow2 suffix)
+```
+
+#### Example to List Disks
+
+```bash
+./v-run.sh list
+```
+
+#### Example to Run a VM
+
+```bash
+./v-run.sh test-vm
+```
+
+This will boot the VM with the disk named `test-vm.qcow2` from the `disks/` folder.
+
+---
