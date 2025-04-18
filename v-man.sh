@@ -85,14 +85,15 @@ echo "Creating iso file based on default seed data..."
 cloud-localds "./$vm_id/seed.iso" "./$vm_id/user-data" "./$vm_id/meta-data"
 
 # kernel and initrd is needed for auto-install procces
-sudo mkdir -p /mnt/virtual-man
-sudo mount -o loop "$iso_path" /mnt/virtual-man || {
+mnt_dir="./$vm_id/mnt"
+sudo mkdir -p "$mnt_dir"
+sudo mount -o loop "$iso_path" "$mnt_dir" || {
   echo "Failed to mount ISO file. Exiting..."
   exit 1
 }
-cp /mnt/virtual-man/casper/vmlinuz "./$vm_id/kernel"
-cp /mnt/virtual-man/casper/initrd "./$vm_id/initrd.img"
-sudo umount /mnt/virtual-man
+cp "$mnt_dir/casper/vmlinuz" "./$vm_id/kernel"
+cp "$mnt_dir/casper/initrd" "./$vm_id/initrd.img"
+sudo umount "$mnt_dir"
 
 read -p "Do you want to proceed with the installation? [y/N]: " choice
 
