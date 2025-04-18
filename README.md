@@ -1,4 +1,4 @@
-# V-man
+# Virtual-Man
 
 This bash script automates the creation and installation of an Ubuntu virtual machine using **cloud-init autoinstall**, `qemu`, and `cloud-localds`.
 
@@ -21,14 +21,14 @@ This bash script automates the creation and installation of an Ubuntu virtual ma
 
 ---
 
-## 🚀 Usage
+### 1. **Add VM with `v-add.sh`:**
 
 ```bash
-chmod +x v-man.sh
-./v-man.sh <vm_name> <iso_path> [disk_size] [username] [password]
+chmod +x v-add.sh
+./v-add.sh <vm_name> <iso_path> [disk_size] [username] [password]
 ```
 
-### Arguments
+#### Arguments
 
 | Argument    | Description                      | Default  |
 |-------------|----------------------------------|----------|
@@ -38,7 +38,7 @@ chmod +x v-man.sh
 | `username`  | Login username                   | `ubuntu` |
 | `password`  | Login password                   | `ubuntu` |
 
-### Example
+#### Example
 
 ```bash
 ./v-man.sh test-vm ubuntu-live-server.iso 25G john mysecretpass
