@@ -84,16 +84,6 @@ EOF
 echo "Creating iso file based on default seed data..."
 cloud-localds "./$vm_id/seed.iso" "./$vm_id/user-data" "./$vm_id/meta-data"
 
-
-read -p "Do you want to proceed with the installation? [y/N]: " choice
-
-if [[ "$choice" == "y" || "$choice" == "Y" ]]; then
-  echo "Running the VM with pre-seeded installation..."
-else
-  echo "Installation aborted; You can run it later."
-  exit 1
-fi
-
 # kernel and initrd is needed for auto-install procces
 sudo mkdir -p /mnt/virtual-man
 sudo mount -o loop "$iso_path" /mnt/virtual-man || {
@@ -103,6 +93,15 @@ sudo mount -o loop "$iso_path" /mnt/virtual-man || {
 cp /mnt/virtual-man/casper/vmlinuz "./$vm_id/kernel"
 cp /mnt/virtual-man/casper/initrd "./$vm_id/initrd.img"
 sudo umount /mnt/virtual-man
+
+read -p "Do you want to proceed with the installation? [y/N]: " choice
+
+if [[ "$choice" == "y" || "$choice" == "Y" ]]; then
+  echo "Running the VM with pre-seeded installation..."
+else
+  echo "Installation aborted; You can run it later."
+  exit 1
+fi
 
 sudo qemu-system-x86_64 \
   -enable-kvm \
