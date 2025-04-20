@@ -33,8 +33,14 @@ QEMU_CMD="sudo qemu-system-x86_64 \
 # Add daemonize flags if requested
 if [ "$arg2" == "--daemon" ] || [ "$arg2" == "-d" ]; then
   mkdir -p "daemons"
-  QEMU_CMD="$QEMU_CMD -pidfile ./daemons/$arg.pid -daemonize -display none"
+  pid_file_path="./daemons/$arg.pid"
+
+  QEMU_CMD+=" -pidfile \"$pid_file_path\" -daemonize -display none"
+  # Modifying ownership and permission for reading in v-kill.sh
+  QEMU_CMD+=" && sudo chown $USER:$USER \"$pid_file_path\""
+  QEMU_CMD+=" && chmod 644 \"$pid_file_path\""
 fi
+
 
 # Execute the command
 eval "$QEMU_CMD"
